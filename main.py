@@ -29,6 +29,7 @@ class Card:
         self.name = name
         self.value = value
         self.id = Card.cardId
+        self.blockers = []
 
         Card.cardId += 1
 
@@ -48,6 +49,11 @@ class Deck:
     def __iter__(self):
         return MyIterator(self.cards)
 
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(Deck, cls).__new__(cls)
+        return cls.instance
+
     def shuffle_deck(self):
         shuffle(self.cards)
 
@@ -55,11 +61,6 @@ class Deck:
         for x in self.cards:
             if x.id == card_id:
                 self.cards.remove(x)
-
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(Deck, cls).__new__(cls)
-        return cls.instance
 
 
 class PyramidBoard:
@@ -74,6 +75,15 @@ class PyramidBoard:
         if not hasattr(cls, 'instance'):
             cls.instance = super(PyramidBoard, cls).__new__(cls)
         return cls.instance
+
+    def __iter__(self):
+        return MyIterator(self.board_cards)
+
+    @staticmethod
+    def has_blockers(card_obj):
+        if len(card_obj.blockers) != 0:
+            return True
+        return False
 
     def execute_for_gui(self):
         # code here
@@ -100,17 +110,28 @@ class PyramidBoard:
             if y.id == second_id:
                 second_id_card = y
 
+        if self.has_blockers(first_id_card) or self.has_blockers(second_id_card):
+            raise RuntimeError()
+
+        if first_id_card in self.deck and second_id_card in self.deck:
+            raise RuntimeError()
+
         if first_id_card.value != 13 and second_id_card.value != 13:
             if first_id_card.value + second_id_card.value == 13:
-                self.delete_card(first_id_card)
-                self.delete_card(second_id_card)
-                return [first_id, second_id]
-        if first_id_card.value == 13:
-            self.delete_card(first_id_card)
-            return [first_id]
+                self.update_blockers(first_id)
+                self.update_blockers(second_id)
+                self.delete_card(first_id)
+                self.delete_card(second_id)
 
-        self.delete_card(second_id_card)
-        return [second_id]
+        if first_id_card.value == 13:
+            self.update_blockers(first_id)
+            self.delete_card(first_id)
+
+        if second_id_card.value == 13:
+            self.update_blockers(second_id)
+            self.delete_card(second_id)
+
+        return True
 
     def delete_card(self, card_id):
         card_deleted = False
@@ -121,6 +142,25 @@ class PyramidBoard:
                 card_deleted = True
 
         if not card_deleted:
-            for x in self.deck:
-                if x.id == card_id:
-                    self.deck.remove_card(x)
+            self.deck.remove_card(card_id)
+
+    def get_card_by_id(self, card_id):
+        for x in self.board_cards:
+            if x.id == card_id:
+                return x
+
+        for y in self.deck:
+            if y.id == card_id:
+                return y
+
+    def get_card_by_position(self, card_position):
+        for card in self.board_cards:
+            if card.position == card_position:
+                return card
+
+    def update_blockers(self, card_id):
+        card = self.get_card_by_id(card_id)
+
+        for card_elem in self.board_cards:
+            if hasattr(card, 'position') and card.position in card_elem.blockers:
+                card_elem.blockers.remove(card.position)
