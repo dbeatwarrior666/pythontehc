@@ -16,39 +16,40 @@ def validate_input(text):
             return command
 
 
+def end_game():
+    print('*' * 70, '*' * 70, '*' * 70, sep='\n', end='\n')
+    print('*' * 22, '*' * 25, sep='WOW INCREDIBLE YOU WIN!', end='\n')
+    print('*' * 70, '*' * 70, '*' * 70, sep='\n', end='\n')
+
+
 def render_board():
 
     if len(board.board_cards) == 0:
-        print('*' * 70)
-        print('*' * 70)
-        print('*' * 70)
-        print('*' * 22, end='WOW INCREDIBLE YOU WIN!')
-        print('*' * 25)
-        print('*' * 70)
-        print('*' * 70)
-        print('*' * 70)
+        end_game()
+        return
 
     spaces = 70
     position = 1
-    for i in range(7):
+    for counter in range(7):
         print(' ' * spaces, end='')
-        for j in range(i + 1):
+        for second_counter in range(counter + 1):
             element = board.get_card_by_position(position)
             position += 1
 
             if element is None:
                 print(' ' * 12, end='      ')
                 continue
+
             if hasattr(element, 'blockers') and len(element.blockers) > 0:
                 print('[ hidden card ] ', end=' ')
 
             else:
-                print('[ "id:{}" {} ]'.format(element.id, element.name), end='  ')
+                print('[ "id:{}" {} ]'.format(element.id, element.name), end='   ')
 
-        print(' ', end='\n')
-        print(' ', end='\n')
+        print(' ', sep='\n', end='\n')
         spaces -= 7
 
+    print(' ', sep='\n', end='\n')
     print('Deck: ', end=' ')
     for x in deck:
         print('[ "id:{}" {} ]'.format(x.id, x.name), end='  |  ')
@@ -60,34 +61,34 @@ def initialize_board():
 
     iterator = iter(deck)
     position = 1
-    for i in range(7):
-        print(' ' * spaces, end='')
-        for j in range(i + 1):
 
+    for line in range(7):
+        print(' ' * spaces, end='')
+        for card_position in range(line + 1):
             element = next(iterator)
 
-            board.add_board_card(element.id)
+            board.add_board_card(element)
             element.position = position
-            deck.remove_card(element.id)
+            deck.remove(element)
 
-
-
-            if i != 6:
-                element.blockers = [position + i + 1, position + i + 2]
+            if line != 6:
+                element.blockers = [position + line + 1, position + line + 2]
                 print('[ hidden card ] ', end=' ')
             else:
                 print('[ "id:{}" {} ]'.format(element.id, element.name), end='   ')
 
             position += 1
 
-        print(' ', end='\n')
-        print(' ', end='\n')
+        print(' ', sep='\n', end='\n')
         spaces -= 7
 
+    print(' ', sep='\n', end='\n')
     print('Deck: ', end=' ')
     for x in deck:
         print('[ "id:{}" {} ]'.format(x.id, x.name), end='  |  ')
     print(' ', end='\n')
+
+    initialize_game()
 
 
 def initialize_game():
@@ -102,7 +103,7 @@ def initialize_game():
                 first_card_id = validate_input('enter first card id: ')
                 second_card_id = validate_input('enter second card id: ')
 
-                board.add_cards(first_card_id, second_card_id)
+                board.add_two_cards(first_card_id, second_card_id)
             except RuntimeError:
                 print('You cant add this card! Try again!')
             else:
@@ -112,4 +113,4 @@ def initialize_game():
 
 
 initialize_board()
-initialize_game()
+

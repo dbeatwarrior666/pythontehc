@@ -1,4 +1,3 @@
-import types
 from random import shuffle
 
 
@@ -57,19 +56,14 @@ class Deck:
     def shuffle_deck(self):
         shuffle(self.cards)
 
-    def remove_card(self, card_id):
-        for x in self.cards:
-            if x.id == card_id:
-                self.cards.remove(x)
+    def remove(self, card):
+        self.cards.remove(card)
 
 
 class PyramidBoard:
-    def __init__(self, func=None):
+    def __init__(self):
         self.board_cards = []
-        if func is None:
-            self.deck = Deck()
-        else:
-            self.execute = types.MethodType(func, self)
+        self.deck = Deck()
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -80,35 +74,18 @@ class PyramidBoard:
         return MyIterator(self.board_cards)
 
     @staticmethod
-    def has_blockers(card_obj):
-        if len(card_obj.blockers) != 0:
+    def has_blockers(card):
+        if len(card.blockers) != 0:
             return True
         return False
 
-    def execute_for_gui(self):
-        # code here
-        pass
+    def add_board_card(self, card):
+        self.board_cards.append(card)
 
-    def add_board_card(self, card_id):
-        for x in self.deck:
-            if x.id == card_id:
-                self.board_cards.append(x)
+    def add_two_cards(self, first_id, second_id):
 
-    def add_cards(self, first_id, second_id):
-        first_id_card = 0
-        second_id_card = 0
-
-        for x in self.board_cards:
-            if x.id == first_id:
-                first_id_card = x
-            if x.id == second_id:
-                second_id_card = x
-
-        for y in self.deck:
-            if y.id == first_id:
-                first_id_card = y
-            if y.id == second_id:
-                second_id_card = y
+        first_id_card = self.get_card_by_id(first_id)
+        second_id_card = self.get_card_by_id(second_id)
 
         if self.has_blockers(first_id_card) or self.has_blockers(second_id_card):
             raise RuntimeError()
@@ -118,49 +95,40 @@ class PyramidBoard:
 
         if first_id_card.value != 13 and second_id_card.value != 13:
             if first_id_card.value + second_id_card.value == 13:
-                self.update_blockers(first_id)
-                self.update_blockers(second_id)
-                self.delete_card(first_id)
-                self.delete_card(second_id)
+                self.update_blockers(first_id_card)
+                self.update_blockers(second_id_card)
+                self.delete_card(first_id_card)
+                self.delete_card(second_id_card)
 
         if first_id_card.value == 13:
-            self.update_blockers(first_id)
-            self.delete_card(first_id)
+            self.update_blockers(first_id_card)
+            self.delete_card(first_id_card)
 
         if second_id_card.value == 13:
-            self.update_blockers(second_id)
-            self.delete_card(second_id)
+            self.update_blockers(second_id_card)
+            self.delete_card(second_id_card)
 
-        return True
-
-    def delete_card(self, card_id):
-        card_deleted = False
-
-        for x in self.board_cards:
-            if x.id == card_id:
-                self.board_cards.remove(x)
-                card_deleted = True
-
-        if not card_deleted:
-            self.deck.remove_card(card_id)
+    def delete_card(self, card):
+        if card in self.board_cards:
+            self.board_cards.remove(card)
+        elif card in self.deck:
+            self.deck.remove(card)
 
     def get_card_by_id(self, card_id):
-        for x in self.board_cards:
-            if x.id == card_id:
-                return x
+        for card in self.board_cards:
+            if card.id == card_id:
+                return card
 
-        for y in self.deck:
-            if y.id == card_id:
-                return y
+        for card in self.deck:
+            if card.id == card_id:
+                return card
 
     def get_card_by_position(self, card_position):
         for card in self.board_cards:
             if card.position == card_position:
                 return card
 
-    def update_blockers(self, card_id):
-        card = self.get_card_by_id(card_id)
-
+    def update_blockers(self, card):
         for card_elem in self.board_cards:
             if hasattr(card, 'position') and card.position in card_elem.blockers:
                 card_elem.blockers.remove(card.position)
